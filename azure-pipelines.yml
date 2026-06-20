@@ -25,6 +25,10 @@ steps:
     SourceFolder: '$(System.DefaultWorkingDirectory)/webapp/target'
     Contents: '**/.war'
     TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+    echo "WAR files:"
+    find $(System.DefaultWorkingDirectory) -name "*.war"
+  displayName: "Locate WAR File"
 - task: PublishBuildArtifacts@1
   inputs:
     PathtoPublish: '$(Build.ArtifactStagingDirectory)'
