@@ -42,8 +42,9 @@ stages:
         artifactName: 'warfile'
         downloadPath: '$(System.ArtifactsDirectory)'
 
+    # 🔥 IMPORTANT FIX HERE: deploy ROOT.war
     - task: AzureWebApp@1
       inputs:
         azureSubscription: 'AzureServiceConnection'
         appName: 'vivekdevops'
-        package: '$(System.ArtifactsDirectory)/warfile'
+        package: '$(System.ArtifactsDirectory)/warfile/ROOT.war'
