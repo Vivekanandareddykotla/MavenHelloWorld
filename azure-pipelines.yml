@@ -42,8 +42,8 @@ stages:
         artifactName: 'warfile'
         downloadPath: '$(System.ArtifactsDirectory)'
 
-- task: AzureWebApp@1
-  inputs:
-    azureSubscription: 'AzureServiceConnection'
-    appName: 'vivekdevops'
-    package: '$(System.ArtifactsDirectory)/warfile'
+    - task: AzureWebApp@1
+      inputs:
+        azureSubscription: 'AzureServiceConnection'
+        appName: 'vivekdevops'
+        package: '$(System.ArtifactsDirectory)/warfile'
