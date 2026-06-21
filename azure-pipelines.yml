@@ -2,38 +2,33 @@ trigger:
   branches:
     include:
     - master
-
 stages:
 - stage: Build
   jobs:
   - job: BuildJob
     pool:
       vmImage: ubuntu-latest
-
     steps:
     - task: Maven@4
       inputs:
         mavenPomFile: 'pom.xml'
         goals: 'clean package'
-
     - task: CopyFiles@2
       inputs:
         SourceFolder: '$(System.DefaultWorkingDirectory)/webapp/target'
         Contents: '*.war'
         TargetFolder: '$(Build.ArtifactStagingDirectory)'
-
     - task: PublishBuildArtifacts@1
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         ArtifactName: 'warfile'
-
 - stage: Deploy
-  dependsOn: Build
+  dependsOn:
+  - Build
   jobs:
   - job: DeployJob
     pool:
       vmImage: ubuntu-latest
-
     steps:
     - task: DownloadBuildArtifacts@0
       inputs:
@@ -41,10 +36,8 @@ stages:
         downloadType: 'single'
         artifactName: 'warfile'
         downloadPath: '$(System.ArtifactsDirectory)'
-
-    # 🔥 IMPORTANT FIX HERE: deploy ROOT.war
     - task: AzureWebApp@1
       inputs:
         azureSubscription: 'AzureServiceConnection'
         appName: 'vivekdevops'
-        package: '$(System.ArtifactsDirectory)/warfile/ROOT.war'
+        package: '$(System.ArtifactsDirectory)/warfile'
