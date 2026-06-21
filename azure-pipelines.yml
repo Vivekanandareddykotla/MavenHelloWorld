@@ -1,40 +1,49 @@
-#maven
-
 trigger:
-- master
+  branches:
+    include:
+    - master
 
-pool:
-  vmImage: ubuntu-latest
+stages:
+- stage: Build
+  jobs:
+  - job: BuildJob
+    pool:
+      vmImage: ubuntu-latest
 
-steps:
-- task: Maven@4
-  inputs:
-    mavenPomFile: 'pom.xml'
-    mavenOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.11'
-    jdkArchitectureOption: 'x64'
-    publishJUnitResults: true
-    testResultsFiles: '**/surefire-reports/TEST-*.xml'
-    goals: 'package'
+    steps:
+    - task: Maven@4
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'clean package'
 
-- script: |
-    echo "WAR files:"
-    find $(System.DefaultWorkingDirectory) -name "*.war"
-  displayName: 'Locate WAR File'
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(System.DefaultWorkingDirectory)/webapp/target'
+        Contents: '*.war'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
 
-- task: CopyFiles@2
-  inputs:
-    SourceFolder: '$(System.DefaultWorkingDirectory)/webapp/target'
-    Contents: '*.war'
-    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'warfile'
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'warfile'
-    publishLocation: 'Container'
-    
-    azureSubscription: 'AzureServiceConnection'
-    appName: 'vivekdevops'
-    package: '$(Build.ArtifactStagingDirectory)/webapp.war'
+- stage: Deploy
+  dependsOn: Build
+  jobs:
+  - job: DeployJob
+    pool:
+      vmImage: ubuntu-latest
+
+    steps:
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'warfile'
+        downloadPath: '$(System.ArtifactsDirectory)'
+
+    - task: AzureWebApp@1
+      inputs:
+        azureSubscription: 'AzureServiceConnection'
+        appName: 'vivekdevops'
+        package: '$(System.ArtifactsDirectory)/warfile/webapp.war'
